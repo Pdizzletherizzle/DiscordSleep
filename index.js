@@ -1,7 +1,7 @@
 //discord sleep bot verify NodeJS
 require('dotenv').config();
 const { Client, GatewayIntentBits } = require('discord.js');
-const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, VoiceConnectionStatus, entersState, getVoiceConnection } = require('@discordjs/voice');
+const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, VoiceConnectionStatus, getVoiceConnection } = require('@discordjs/voice');
 const ytdl = require('ytdl-core');
 
 const client = new Client({
@@ -35,6 +35,7 @@ client.on('messageCreate', async message => {
                         const stream = ytdl(url, { filter: 'audioonly', quality: 'highestaudio' });
                         const resource = createAudioResource(stream);
                         const player = createAudioPlayer();
+
                         player.play(resource);
                         connection.subscribe(player);
 
@@ -51,15 +52,25 @@ client.on('messageCreate', async message => {
 
                         player.on('error', error => {
                             console.error('Error in audio player:', error);
+                            console.log('Connection state:', connection.state.status);
                             if (connection.state.status !== VoiceConnectionStatus.Destroyed) {
                                 connection.destroy();
                             }
                         });
+
                     } catch (error) {
                         console.error('Error during playback:', error);
+                        console.log('Connection state:', connection.state.status);
                         if (connection.state.status !== VoiceConnectionStatus.Destroyed) {
                             connection.destroy();
                         }
+                    }
+                });
+
+                connection.on(VoiceConnectionStatus.Disconnected, () => {
+                    console.log('Disconnected from the channel.');
+                    if (connection.state.status !== VoiceConnectionStatus.Destroyed) {
+                        connection.destroy();
                     }
                 });
 
@@ -89,4 +100,5 @@ client.on('messageCreate', async message => {
 });
 
 client.login(process.env.DISCORD_BOT_TOKEN);
+
 ///
