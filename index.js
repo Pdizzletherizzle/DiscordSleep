@@ -16,6 +16,7 @@ const client = new Client({
 
 client.once('ready', () => {
     console.log('Bot is online!');
+    console.log('__dirname:', __dirname); // Log the __dirname value for debugging
 });
 
 client.on('messageCreate', async message => {
@@ -105,7 +106,8 @@ client.on('messageCreate', async message => {
     if (message.content.startsWith('!playfile ')) {
         const number = parseInt(message.content.split(' ')[1], 10);
         if (number >= 1 && number <= 5) {
-            const filePath = path.join(__dirname, 'audio', `file${number}.mp3`);  // Assuming your files are named file1.mp3, file2.mp3, etc.
+            const filePath = path.join(__dirname, 'audio', `Sleep${number}.mp3`);  // Adjusted to match your file names
+            console.log('Attempting to play file:', filePath); // Log the file path for debugging
             if (fs.existsSync(filePath)) {
                 if (message.member.voice.channel) {
                     const connection = joinVoiceChannel({
@@ -189,4 +191,5 @@ client.login(process.env.DISCORD_BOT_TOKEN);
 
 
 
-///v4
+
+///v5 
