@@ -4,6 +4,7 @@ const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerSta
 const ytdl = require('ytdl-core');
 const fs = require('fs');
 const path = require('path');
+const sodium = require('libsodium-wrappers'); // Import libsodium-wrappers
 
 const client = new Client({
     intents: [
@@ -14,7 +15,8 @@ const client = new Client({
     ]
 });
 
-client.once('ready', () => {
+client.once('ready', async () => {
+    await sodium.ready; // Ensure libsodium-wrappers is ready
     console.log('Bot is online!');
     console.log('__dirname:', __dirname); // Log the __dirname value for debugging
 });
@@ -192,4 +194,5 @@ client.login(process.env.DISCORD_BOT_TOKEN);
 
 
 
-///v5 
+
+///v6 wrapper
