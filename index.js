@@ -22,6 +22,7 @@ client.on('messageCreate', async message => {
         if (message.member.voice.channel) {
             const url = message.content.split(' ')[1];
             if (ytdl.validateURL(url)) {
+                console.log('Valid YouTube URL received:', url);
                 const connection = joinVoiceChannel({
                     channelId: message.member.voice.channel.id,
                     guildId: message.guild.id,
@@ -32,12 +33,17 @@ client.on('messageCreate', async message => {
                 connection.on(VoiceConnectionStatus.Ready, async () => {
                     console.log('The bot has connected to the channel!');
                     try {
+                        console.log('Attempting to create audio stream...');
                         const stream = ytdl(url, { filter: 'audioonly', quality: 'highestaudio' });
+                        console.log('Audio stream created.');
                         const resource = createAudioResource(stream);
+                        console.log('Audio resource created.');
                         const player = createAudioPlayer();
+                        console.log('Audio player created.');
 
                         player.play(resource);
                         connection.subscribe(player);
+                        console.log('Player subscribed to connection.');
 
                         player.on(AudioPlayerStatus.Playing, () => {
                             console.log('The audio is now playing!');
@@ -47,6 +53,7 @@ client.on('messageCreate', async message => {
                             console.log('The audio has finished playing!');
                             if (connection.state.status !== VoiceConnectionStatus.Destroyed) {
                                 connection.destroy();
+                                console.log('Connection destroyed.');
                             }
                         });
 
@@ -55,6 +62,7 @@ client.on('messageCreate', async message => {
                             console.log('Connection state:', connection.state.status);
                             if (connection.state.status !== VoiceConnectionStatus.Destroyed) {
                                 connection.destroy();
+                                console.log('Connection destroyed due to error.');
                             }
                         });
 
@@ -63,6 +71,7 @@ client.on('messageCreate', async message => {
                         console.log('Connection state:', connection.state.status);
                         if (connection.state.status !== VoiceConnectionStatus.Destroyed) {
                             connection.destroy();
+                            console.log('Connection destroyed due to error in try block.');
                         }
                     }
                 });
@@ -71,6 +80,7 @@ client.on('messageCreate', async message => {
                     console.log('Disconnected from the channel.');
                     if (connection.state.status !== VoiceConnectionStatus.Destroyed) {
                         connection.destroy();
+                        console.log('Connection destroyed due to disconnection.');
                     }
                 });
 
@@ -78,13 +88,16 @@ client.on('messageCreate', async message => {
                     console.error('Connection error:', error);
                     if (connection.state.status !== VoiceConnectionStatus.Destroyed) {
                         connection.destroy();
+                        console.log('Connection destroyed due to connection error.');
                     }
                 });
             } else {
                 message.reply('Please provide a valid YouTube URL.');
+                console.log('Invalid YouTube URL provided.');
             }
         } else {
             message.reply('You need to join a voice channel first!');
+            console.log('User is not in a voice channel.');
         }
     }
 
@@ -93,12 +106,15 @@ client.on('messageCreate', async message => {
         if (connection) {
             connection.destroy();
             message.reply('Stopped playing and left the voice channel.');
+            console.log('Connection destroyed on stop command.');
         } else {
             message.reply('I am not in a voice channel.');
+            console.log('Stop command received but bot is not in a voice channel.');
         }
     }
 });
 
 client.login(process.env.DISCORD_BOT_TOKEN);
 
-///
+
+///2
