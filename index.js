@@ -1,4 +1,3 @@
-//discord sleep bot verify NodeJS
 require('dotenv').config();
 const { Client, GatewayIntentBits } = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, VoiceConnectionStatus, getVoiceConnection } = require('@discordjs/voice');
@@ -60,6 +59,9 @@ client.on('messageCreate', async message => {
                         player.on('error', error => {
                             console.error('Error in audio player:', error);
                             console.log('Connection state:', connection.state.status);
+                            if (error.message.includes('Status code: 410')) {
+                                console.log('The requested video is no longer available.');
+                            }
                             if (connection.state.status !== VoiceConnectionStatus.Destroyed) {
                                 connection.destroy();
                                 console.log('Connection destroyed due to error.');
@@ -117,4 +119,5 @@ client.on('messageCreate', async message => {
 client.login(process.env.DISCORD_BOT_TOKEN);
 
 
-///2
+
+///v3
