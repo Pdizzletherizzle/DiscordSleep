@@ -2,6 +2,8 @@ require('dotenv').config();
 const { Client, GatewayIntentBits } = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, VoiceConnectionStatus, getVoiceConnection } = require('@discordjs/voice');
 const ytdl = require('ytdl-core');
+const fs = require('fs');
+const path = require('path');
 
 const client = new Client({
     intents: [
@@ -18,10 +20,9 @@ client.once('ready', () => {
 
 client.on('messageCreate', async message => {
     if (message.content.startsWith('!play ')) {
-        if (message.member.voice.channel) {
-            const url = message.content.split(' ')[1];
-            if (ytdl.validateURL(url)) {
-                console.log('Valid YouTube URL received:', url);
+        const url = message.content.split(' ')[1];
+        if (ytdl.validateURL(url)) {
+            if (message.member.voice.channel) {
                 const connection = joinVoiceChannel({
                     channelId: message.member.voice.channel.id,
                     guildId: message.guild.id,
@@ -50,10 +51,8 @@ client.on('messageCreate', async message => {
 
                         player.on(AudioPlayerStatus.Idle, () => {
                             console.log('The audio has finished playing!');
-                            if (connection.state.status !== VoiceConnectionStatus.Destroyed) {
-                                connection.destroy();
-                                console.log('Connection destroyed.');
-                            }
+                            connection.destroy();
+                            console.log('Connection destroyed.');
                         });
 
                         player.on('error', error => {
@@ -94,12 +93,81 @@ client.on('messageCreate', async message => {
                     }
                 });
             } else {
-                message.reply('Please provide a valid YouTube URL.');
-                console.log('Invalid YouTube URL provided.');
+                message.reply('You need to join a voice channel first!');
+                console.log('User is not in a voice channel.');
             }
         } else {
-            message.reply('You need to join a voice channel first!');
-            console.log('User is not in a voice channel.');
+            message.reply('Please provide a valid YouTube URL.');
+            console.log('Invalid YouTube URL provided.');
+        }
+    }
+
+    if (message.content.startsWith('!playfile ')) {
+        const number = parseInt(message.content.split(' ')[1], 10);
+        if (number >= 1 && number <= 5) {
+            const filePath = path.join(__dirname, 'audio', `file${number}.mp3`);  // Assuming your files are named file1.mp3, file2.mp3, etc.
+            if (fs.existsSync(filePath)) {
+                if (message.member.voice.channel) {
+                    const connection = joinVoiceChannel({
+                        channelId: message.member.voice.channel.id,
+                        guildId: message.guild.id,
+                        adapterCreator: message.guild.voiceAdapterCreator,
+                        selfDeaf: false,
+                    });
+
+                    connection.on(VoiceConnectionStatus.Ready, () => {
+                        console.log('The bot has connected to the channel!');
+                        try {
+                            const resource = createAudioResource(filePath);
+                            const player = createAudioPlayer();
+                            player.play(resource);
+                            connection.subscribe(player);
+
+                            player.on(AudioPlayerStatus.Playing, () => {
+                                console.log('The audio is now playing!');
+                            });
+
+                            player.on(AudioPlayerStatus.Idle, () => {
+                                console.log('The audio has finished playing!');
+                                connection.destroy();
+                                console.log('Connection destroyed.');
+                            });
+
+                            player.on('error', error => {
+                                console.error('Error in audio player:', error);
+                                if (connection.state.status !== VoiceConnectionStatus.Destroyed) {
+                                    connection.destroy();
+                                    console.log('Connection destroyed due to error.');
+                                }
+                            });
+
+                        } catch (error) {
+                            console.error('Error during playback:', error);
+                            if (connection.state.status !== VoiceConnectionStatus.Destroyed) {
+                                connection.destroy();
+                                console.log('Connection destroyed due to error in try block.');
+                            }
+                        }
+                    });
+
+                    connection.on('error', error => {
+                        console.error('Connection error:', error);
+                        if (connection.state.status !== VoiceConnectionStatus.Destroyed) {
+                            connection.destroy();
+                            console.log('Connection destroyed due to connection error.');
+                        }
+                    });
+                } else {
+                    message.reply('You need to join a voice channel first!');
+                    console.log('User is not in a voice channel.');
+                }
+            } else {
+                message.reply('The requested file does not exist.');
+                console.log('The requested file does not exist:', filePath);
+            }
+        } else {
+            message.reply('Please provide a number between 1 and 5.');
+            console.log('Invalid number provided.');
         }
     }
 
@@ -120,4 +188,5 @@ client.login(process.env.DISCORD_BOT_TOKEN);
 
 
 
-///v3
+
+///v4
